@@ -53,42 +53,31 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// CareerSync Premium colors
-				navy: {
-					50: '#e6f1fe',
-					100: '#cce3fd',
-					200: '#99c7fb',
-					300: '#66abf9',
-					400: '#338ff7',
-					500: '#0466C8', // Electric blue
-					600: '#0355a6',
-					700: '#024483',
-					800: '#023461',
-					900: '#0A1128', // Deep navy
+				// CareerSync Cobalt Blue + Cream palette
+				cobalt: {
+					50: '#eef1fb',
+					100: '#d4dbf5',
+					200: '#a9b7eb',
+					300: '#7e93e1',
+					400: '#536fd7',
+					500: '#1f3fc3',   // Primary cobalt blue
+					600: '#1a35a5',
+					700: '#152b87',
+					800: '#102069',
+					900: '#0b164b',
+					950: '#060d2f',
 				},
-				teal: {
-					50: '#e6f9f9',
-					100: '#ccf3f3',
-					200: '#99e7e6',
-					300: '#66dbda',
-					400: '#33cfcd',
-					500: '#33C1BF', // Soft teal
-					600: '#2a9e9c',
-					700: '#217c7a',
-					800: '#195a59',
-					900: '#123837',
-				},
-				silver: {
-					50: '#fcfcfc',
-					100: '#f9f9fa',
-					200: '#f4f4f5',
-					300: '#eeeff0',
-					400: '#e9eaeb',
-					500: '#E6E8E9', // Platinum silver
-					600: '#bbbcbd',
-					700: '#909193',
-					800: '#666768',
-					900: '#3c3c3d',
+				cream: {
+					50: '#faf9f0',
+					100: '#f5f4e5',
+					200: '#efeed7',   // Primary cream
+					300: '#e5e3c3',
+					400: '#d5d2a8',
+					500: '#c5c18d',
+					600: '#a8a36e',
+					700: '#8b8553',
+					800: '#6e6a3e',
+					900: '#524f2d',
 				},
 			},
 			borderRadius: {
@@ -156,23 +145,24 @@ export default {
 				'progress-line': 'progress-line 2.5s ease-out',
 			},
 			fontFamily: {
-				sans: ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
+				sans: ['Poppins', 'system-ui', 'sans-serif'],
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
-				'premium-gradient': 'linear-gradient(135deg, #0A1128, #0b1b47)',
-				'card-gradient': 'linear-gradient(135deg, rgba(4, 102, 200, 0.08), rgba(51, 193, 191, 0.05))',
-				'button-gradient': 'linear-gradient(to right, #0466C8, #0355a6)',
-				'teal-gradient': 'linear-gradient(to right, #33C1BF, #2a9e9c)',
+				'cobalt-gradient': 'linear-gradient(135deg, #1f3fc3, #152b87)',
+				'cobalt-light-gradient': 'linear-gradient(135deg, #536fd7, #1f3fc3)',
+				'cream-gradient': 'linear-gradient(135deg, #faf9f0, #efeed7)',
+				'hero-gradient': 'linear-gradient(135deg, #0b164b 0%, #1f3fc3 50%, #536fd7 100%)',
+				'card-gradient': 'linear-gradient(135deg, rgba(31, 63, 195, 0.03), rgba(239, 238, 215, 0.3))',
+				'cta-gradient': 'linear-gradient(135deg, #1f3fc3, #0b164b)',
 			},
 			boxShadow: {
-				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
-				'card': '0 10px 30px -5px rgba(10, 17, 40, 0.2)',
-				'premium': '0 8px 30px rgba(4, 102, 200, 0.14)',
-				'hover': '0 10px 40px -5px rgba(4, 102, 200, 0.3)',
-				'button': '0 4px 10px rgba(4, 102, 200, 0.3)',
-				'subtle': '0 2px 5px rgba(10, 17, 40, 0.08)',
+				'subtle': '0 1px 3px rgba(31, 63, 195, 0.06)',
+				'card': '0 4px 16px -2px rgba(31, 63, 195, 0.08)',
+				'hover': '0 12px 32px -4px rgba(31, 63, 195, 0.15)',
+				'button': '0 2px 8px rgba(31, 63, 195, 0.2)',
+				'nav': '0 2px 12px rgba(31, 63, 195, 0.06)',
+				'glass': '0 4px 20px rgba(31, 63, 195, 0.05)',
 			},
 			spacing: {
 				'18': '4.5rem',

@@ -20,52 +20,39 @@ const FeatureCard = ({
   delay = 0,
   link = '#'
 }: FeatureCardProps) => {
-  const getGradientClass = () => {
-    switch (gradient) {
-      case 'blue':
-        return 'from-electric-500/30 to-electric-500/5';
-      case 'purple':
-        return 'from-purple-500/30 to-purple-500/5';
-      case 'mixed':
-        return 'from-electric-500/30 to-purple-500/5';
-      default:
-        return 'from-white/10 to-white/5';
-    }
-  };
-
   const getIconClass = () => {
     switch (gradient) {
       case 'blue':
-        return 'bg-gradient-to-br from-electric-400 to-electric-600 shadow-glow';
+        return 'bg-cobalt-500 shadow-button';
       case 'purple':
-        return 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-glow-purple';
+        return 'bg-cobalt-700 shadow-button';
       case 'mixed':
-        return 'bg-gradient-to-br from-electric-500 to-purple-500 shadow-glow';
+        return 'bg-cobalt-gradient shadow-button';
       default:
-        return 'bg-white/10';
+        return 'bg-cobalt-100';
     }
   };
 
   return (
     <div 
-      className={`group bg-gradient-to-b ${getGradientClass()} backdrop-blur-xl rounded-xl border border-white/20 p-8 transition-all duration-300 hover:shadow-glow hover:-translate-y-2 h-full flex flex-col animate-fade-in relative overflow-hidden`}
+      className="group bg-white rounded-xl border border-cobalt-100/50 p-8 transition-all duration-300 hover:shadow-hover hover:-translate-y-2 h-full flex flex-col animate-fade-in relative overflow-hidden"
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Enhanced background elements */}
-      <div className="absolute -bottom-16 -right-16 w-32 h-32 rounded-full bg-white/5 blur-xl"></div>
+      {/* Subtle background accent */}
+      <div className="absolute -bottom-16 -right-16 w-32 h-32 rounded-full bg-cobalt-50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       
-      <div className={`${getIconClass()} rounded-xl p-4 w-14 h-14 flex items-center justify-center mb-6 transform transition-transform group-hover:scale-110`}>
+      <div className={`${getIconClass()} rounded-xl p-4 w-14 h-14 flex items-center justify-center mb-6 transform transition-transform duration-300 group-hover:scale-110`}>
         {icon}
       </div>
       
-      <h3 className="text-xl font-semibold mb-4">{title}</h3>
+      <h3 className="text-xl font-semibold mb-4 text-cobalt-900">{title}</h3>
       
-      <p className="text-gray-300 mb-6 leading-relaxed flex-grow">{description}</p>
+      <p className="text-cobalt-700/60 mb-6 leading-relaxed flex-grow">{description}</p>
       
       <div className="mt-auto pt-4">
         <Link 
           to={link} 
-          className="text-electric-400 font-medium flex items-center group-hover:text-electric-300 transition-colors"
+          className="text-cobalt-600 font-medium flex items-center group-hover:text-cobalt-800 transition-colors"
         >
           Learn more
           <ChevronRight 

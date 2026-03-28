@@ -1,215 +1,115 @@
-import { supabase } from '@/integrations/supabase/client';
+import type { ApiResponse, AuthUser, UserProfile, SearchParams, SearchResults, Job } from "./api.types";
 
-// Job Search API
-export const searchJobs = async (params: {
-  search?: string;
-  location?: string;
-  site?: string;
-  days_old?: number;
-  results?: number;
-  remote_only?: boolean;
-}) => {
-  try {
-    const response = await fetch('https://careersync-m6ct.onrender.com/api/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        search: params.search || '',
-        location: params.location || '',
-        site: params.site || 'all',
-        days_old: params.days_old || 7,
-        results: params.results || 10,
-        remote_only: params.remote_only || false,
-      }),
-    });
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const TOKEN_KEY = "auth_token";
 
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
+const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 
-    const data = await response.json();
-    
-    // Store the search results in localStorage as a string
-    localStorage.setItem("searchResults", JSON.stringify(data));
-    
-    return data;
-  } catch (error) {
-    console.error('Error searching jobs:', error);
-    throw error;
+const request = async <T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> => {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
+  };
+
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const json: ApiResponse<T> = await res.json();
+
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = "/auth";
+    throw new Error("Session expired");
   }
+
+  if (!res.ok && !json.success) {
+    throw new Error(json.message || "Request failed");
+  }
+
+  return json;
 };
 
-// Job Detail API
-export const getJobById = async (jobId: string) => {
-  const { data, error } = await supabase
-    .from('jobs')
-    .select(`
-      *,
-      job_skills(skill)
-    `)
-    .eq('id', jobId)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-// Saved Jobs API
-export const toggleSavedJob = async (jobId: string, action: 'save' | 'unsave') => {
-  const { data, error } = await supabase.functions.invoke('toggle-saved-job', {
-    method: 'POST',
-    body: { jobId, action }
+// ── Auth ───────────────────────────────────────────────
+export const register = (email: string, password: string) =>
+  request<{ token: string; user: AuthUser }>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
   });
-  
-  if (error) throw error;
-  return data;
-};
 
-export const getSavedJobs = async () => {
-  const { data, error } = await supabase
-    .from('saved_jobs')
-    .select(`
-      job_id,
-      jobs(*)
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data.map(item => ({
-    id: item.job_id,
-    ...item.jobs
-  }));
-};
-
-export const checkJobSaved = async (jobId: string) => {
-  const { data, error } = await supabase
-    .from('saved_jobs')
-    .select('id')
-    .eq('job_id', jobId)
-    .maybeSingle();
-  
-  if (error) throw error;
-  return !!data;
-};
-
-// Job Applications API
-export const submitApplication = async ({
-  jobId,
-  resumeUrl,
-  coverLetterUrl,
-  notes
-}: {
-  jobId: string;
-  resumeUrl?: string;
-  coverLetterUrl?: string;
-  notes?: string;
-}) => {
-  const { data, error } = await supabase.functions.invoke('submit-application', {
-    method: 'POST',
-    body: { jobId, resumeUrl, coverLetterUrl, notes }
+export const login = (email: string, password: string) =>
+  request<{ token: string; user: AuthUser }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
   });
-  
-  if (error) throw error;
-  return data;
-};
 
-export const getApplications = async () => {
-  const { data, error } = await supabase
-    .from('applications')
-    .select(`
-      *,
-      jobs(*)
-    `)
-    .order('applied_at', { ascending: false });
-  
-  if (error) throw error;
-  return data;
-};
+export const getMe = () =>
+  request<{ user: AuthUser & { profile: UserProfile } }>("/api/auth/me");
 
-export const getApplicationById = async (applicationId: string) => {
-  const { data, error } = await supabase
-    .from('applications')
-    .select(`
-      *,
-      jobs(*),
-      application_notes(*)
-    `)
-    .eq('id', applicationId)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
+// ── Profile ────────────────────────────────────────────
+export const getProfile = () =>
+  request<{ profile: UserProfile; profile_complete: boolean }>("/api/profile");
 
-export const updateApplicationStatus = async (applicationId: string, status: string) => {
-  const { data, error } = await supabase
-    .from('applications')
-    .update({ 
-      status, 
-      updated_at: new Date().toISOString() 
-    })
-    .eq('id', applicationId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const addApplicationNote = async (applicationId: string, note: string) => {
-  const { data, error } = await supabase
-    .from('application_notes')
-    .insert([{
-      application_id: applicationId,
-      note,
-      user_id: (await supabase.auth.getUser()).data.user?.id
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-// Notifications API
-export const getNotifications = async (params?: {
-  limit?: number;
-  offset?: number;
-  unreadOnly?: boolean;
-}) => {
-  const { data, error } = await supabase.functions.invoke('get-notifications', {
-    method: 'POST',
-    body: { 
-      limit: params?.limit,
-      offset: params?.offset,
-      unreadOnly: params?.unreadOnly 
-    }
+export const updateProfile = (data: Partial<UserProfile>) =>
+  request<{ profile: UserProfile; profile_complete: boolean }>("/api/profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
   });
-  
-  if (error) throw error;
-  return data;
+
+// ── Jobs ───────────────────────────────────────────────
+export const searchJobs = async (params: SearchParams) => {
+  const res = await request<SearchResults>("/api/jobs/search", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+  // Keep existing behaviour: store in localStorage for JobDetail page
+  if (res.success) {
+    localStorage.setItem("searchResults", JSON.stringify({ success: true, data: res.data }));
+  }
+  return res;
 };
 
-export const markNotificationAsRead = async (notificationId: string) => {
-  // Using the edge function instead of direct DB access for better error handling and logging
-  const { data, error } = await supabase.functions.invoke('mark-notification', {
-    method: 'POST',
-    body: { notificationId, read: true }
-  });
-  
-  if (error) throw error;
-  return data;
+export const getRecommendedJobs = () =>
+  request<{ jobs: Job[]; results_count: number; needs_profile: boolean }>("/api/jobs/recommended");
+
+// ── Saved Jobs ─────────────────────────────────────────
+export const getSavedJobs = () =>
+  request<{ saved_jobs: unknown[] }>("/api/saved");
+
+export const toggleSavedJob = (jobId: string, action: "save" | "unsave", jobData?: unknown) => {
+  if (action === "save") {
+    return request(`/api/saved/${jobId}`, {
+      method: "POST",
+      body: JSON.stringify({ job_data: jobData }),
+    });
+  }
+  return request(`/api/saved/${jobId}`, { method: "DELETE" });
 };
 
-export const markAllNotificationsAsRead = async () => {
-  // Using the edge function instead of direct DB access for better error handling and logging
-  const { data, error } = await supabase.functions.invoke('mark-all-notifications', {
-    method: 'POST',
-    body: { read: true }
-  });
-  
-  if (error) throw error;
-  return data;
+export const checkJobSaved = async (jobId: string): Promise<boolean> => {
+  const res = await request<{ is_saved: boolean }>(`/api/saved/check/${jobId}`);
+  return res.data.is_saved;
 };
+
+// ── Applications ───────────────────────────────────────
+export const getApplications = () =>
+  request<{ applications: unknown[] }>("/api/applications");
+
+export const submitApplication = (data: { job_id: string; job_data: unknown; notes?: string }) =>
+  request("/api/applications", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateApplicationStatus = (id: string, status: string) =>
+  request(`/api/applications/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
+// ── Notifications (stubs — wire to DB later) ──────────
+export const getNotifications = async () => ({ data: { notifications: [], unreadCount: 0 } });
+export const markNotificationAsRead = async (_id: string) => ({});
+export const markAllNotificationsAsRead = async () => ({});

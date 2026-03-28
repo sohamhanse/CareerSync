@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getApplications } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 import {
   Card,
@@ -87,17 +88,18 @@ const ApplicationsPage = () => {
   const getFilteredApplications = () => {
     if (!applications) return [];
     
-    if (activeTab === "all") return applications;
-    return applications.filter((app: Application) => app.status === activeTab);
+    if (activeTab === "all") return applications.data?.applications || [];
+    return (applications.data?.applications || []).filter((app: Application) => app.status === activeTab);
   };
 
-  const getStatusCounts = () => {
+  const getStatusCounts = (): Record<string, number> => {
     if (!applications) return {};
     
-    return applications.reduce((acc, app: Application) => {
+    const appsList = applications.data?.applications || [];
+    return appsList.reduce((acc: Record<string, number>, app: Application) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
-    }, { all: applications.length } as Record<string, number>);
+    }, { all: appsList.length });
   };
 
   const statusCounts = getStatusCounts();
@@ -124,20 +126,21 @@ const ApplicationsPage = () => {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-cream-50 text-cobalt-900">
       <Helmet>
         <title>My Applications | CareerSync</title>
       </Helmet>
+      <Navbar />
       
-      <div className="container mx-auto py-12 px-4">
+      <div className="container mx-auto py-24 px-4">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">My Applications</h1>
-              <p className="text-silver-400 mt-1">Track and manage your job applications</p>
+              <h1 className="text-3xl font-bold tracking-tight text-cobalt-900">My Applications</h1>
+              <p className="text-cobalt-500 mt-1">Track and manage your job applications</p>
             </div>
             
-            <Button className="premium-button">
+            <Button className="cs-btn-primary">
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Application
             </Button>
@@ -145,10 +148,10 @@ const ApplicationsPage = () => {
           
           <Tabs defaultValue="all" className="w-full" value={activeTab} onValueChange={setActiveTab}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <TabsList className="premium-glass">
+              <TabsList className="cs-glass">
                 <TabsTrigger value="all">
                   All
-                  {statusCounts.all && <Badge className="ml-2 bg-white/10">{statusCounts.all}</Badge>}
+                  {statusCounts.all && <Badge className="ml-2 bg-cream-100">{statusCounts.all}</Badge>}
                 </TabsTrigger>
                 <TabsTrigger value="applied">
                   Applied
@@ -168,7 +171,7 @@ const ApplicationsPage = () => {
                 </TabsTrigger>
               </TabsList>
               
-              <Button variant="outline" size="sm" className="premium-button-outline">
+              <Button variant="outline" size="sm" className="cs-btn-outline">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>
@@ -182,27 +185,27 @@ const ApplicationsPage = () => {
                   <Skeleton className="h-32 w-full" />
                 </div>
               ) : error ? (
-                <Card className="premium-card">
+                <Card className="cs-card">
                   <CardContent className="pt-6">
                     <div className="text-center p-4">
                       <AlertCircle className="mx-auto h-10 w-10 text-red-500 mb-2" />
                       <h3 className="text-lg font-medium">Error loading applications</h3>
-                      <p className="text-silver-400 mt-1">Please try again later</p>
+                      <p className="text-cobalt-500 mt-1">Please try again later</p>
                     </div>
                   </CardContent>
                 </Card>
               ) : filteredApplications.length === 0 ? (
-                <Card className="premium-card">
+                <Card className="cs-card">
                   <CardContent className="pt-6">
                     <div className="text-center p-4">
-                      <ClipboardList className="mx-auto h-10 w-10 text-silver-500 mb-2" />
+                      <ClipboardList className="mx-auto h-10 w-10 text-cobalt-400 mb-2" />
                       <h3 className="text-lg font-medium">No applications found</h3>
-                      <p className="text-silver-400 mt-1">
+                      <p className="text-cobalt-500 mt-1">
                         {activeTab === "all" 
                           ? "You haven't applied to any jobs yet" 
                           : `No applications with status "${activeTab}"`}
                       </p>
-                      <Button className="premium-button mt-4">
+                      <Button className="cs-btn-primary mt-4">
                         <PlusCircle className="h-4 w-4 mr-2" />
                         Add Application
                       </Button>
@@ -220,10 +223,10 @@ const ApplicationsPage = () => {
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Card className="premium-card-interactive cursor-pointer" onClick={() => navigate(`/applications/${application.id}`)}>
+                        <Card className="cs-card-interactive cursor-pointer" onClick={() => navigate(`/applications/${application.id}`)}>
                           <CardContent className="p-6">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                              <div className="h-12 w-12 rounded-md bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 border border-white/5">
+                              <div className="h-12 w-12 rounded-md bg-cream-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-cobalt-100/30">
                                 {application.jobs.logo_url ? (
                                   <img 
                                     src={application.jobs.logo_url} 
@@ -231,8 +234,8 @@ const ApplicationsPage = () => {
                                     className="w-full h-full object-contain p-1" 
                                   />
                                 ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-navy-500 to-teal-500">
-                                    <span className="font-bold text-white text-lg">
+                                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cobalt-600 to-cobalt-700">
+                                    <span className="font-bold text-cobalt-900 text-lg">
                                       {application.jobs.company.charAt(0)}
                                     </span>
                                   </div>
@@ -240,9 +243,9 @@ const ApplicationsPage = () => {
                               </div>
                               
                               <div className="flex-1">
-                                <h3 className="text-lg font-medium text-white">{application.jobs.title}</h3>
-                                <p className="text-silver-300">{application.jobs.company}</p>
-                                <p className="text-silver-500 text-sm">{application.jobs.location}</p>
+                                <h3 className="text-lg font-medium text-cobalt-900">{application.jobs.title}</h3>
+                                <p className="text-cobalt-600/70">{application.jobs.company}</p>
+                                <p className="text-cobalt-400 text-sm">{application.jobs.location}</p>
                               </div>
                               
                               <div className="flex flex-col items-end gap-2">
@@ -251,8 +254,8 @@ const ApplicationsPage = () => {
                                   <span className="capitalize">{application.status}</span>
                                 </Badge>
                                 <div className="flex flex-col items-end text-sm">
-                                  <span className="text-silver-400">Applied: {formatDate(application.applied_at)}</span>
-                                  <span className="text-silver-500 text-xs">Last updated: {formatDate(application.last_updated_at)}</span>
+                                  <span className="text-cobalt-500">Applied: {formatDate(application.applied_at)}</span>
+                                  <span className="text-cobalt-400 text-xs">Last updated: {formatDate(application.last_updated_at)}</span>
                                 </div>
                               </div>
                             </div>
@@ -267,8 +270,9 @@ const ApplicationsPage = () => {
           </Tabs>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
 export default ApplicationsPage;
+
