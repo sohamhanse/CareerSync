@@ -1,117 +1,72 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import {
   Briefcase,
-  List,
-  Grid,
-  Search as SearchIcon,
+  Upload,
+  Loader2,
+  Brain,
+  FileText,
   X,
-  Upload
+  Sparkles,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
-import JobCard from '../components/JobCard';
-import SearchBar from '../components/SearchBar';
+import AIJobCard from '../components/ui/AIJobCard';
 import Footer from '../components/Footer';
-import { useSearch } from '@/contexts/SearchContext';
+import { analyzeResume } from '@/services/api';
+import type { RecommendationResponse } from '@/services/api.types';
 
 const Search = () => {
-  const location = useLocation();
-
-  const {
-    searchResults,
-    isLoading: isContextLoading,
-    error: contextError,
-    setSearchParams
-  } = useSearch();
-
-  const [filteredJobs, setFilteredJobs] = useState(searchResults?.jobs || []);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('relevance');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<RecommendationResponse | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // Handle Resume Upload
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (file && file.type === 'application/pdf') {
-      setResumeFile(file);
-    } else {
-      alert('Please upload a valid PDF file');
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'pdf' && ext !== 'docx' && ext !== 'doc') {
+      alert('Please upload a PDF or DOCX file');
+      return;
     }
+
+    setResumeFile(file);
+    setAnalysisError(null);
   };
 
-  // Sync URL params (ONLY location now)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const locationParam = params.get('location');
-
-    setSearchParams({
-      location: locationParam || '',
-    });
-
-    if (searchResults && searchResults.jobs) {
-      setFilteredJobs(searchResults.jobs);
-    }
-  }, [location.search, searchResults]);
-
-  // Sorting logic
-  useEffect(() => {
-    if (!searchResults) return;
-
-    let result = [...searchResults.jobs];
-
-    if (sortBy === 'newest') {
-      result.sort(
-        (a, b) =>
-          new Date(b.date_posted).getTime() -
-          new Date(a.date_posted).getTime()
-      );
-    } else if (sortBy === 'match') {
-      result.sort((a, b) => {
-        if (a.skills_required && b.skills_required) {
-          return b.skills_required.length - a.skills_required.length;
-        }
-        return 0;
-      });
-    }
-
-    setFilteredJobs(result);
-  }, [searchResults, sortBy]);
-
-  // Transform job for UI
-  const transformJobForCard = (job: any) => {
-    return {
-      id: job.job_id,
-      title: job.job_title,
-      company: job.company_name,
-      location: job.location || 'Location not specified',
-      company_url: job.company_url,
-      salary: job.salary_range
-        ? `${job.salary_range.currency} ${job.salary_range.min_amount?.toLocaleString()} - ${job.salary_range.max_amount?.toLocaleString()}`
-        : undefined,
-      logo_url: job.company_logo,
-      description: job.job_description,
-      source: job.job_source,
-      source_url: job.job_url,
-      posted_at: job.date_posted,
-      is_remote: job.remote_work === 'Remote',
-      experience_level: job.job_level,
-      job_type: job.listing_type,
-      matchPercentage: job.skills_required
-        ? Math.min(job.skills_required.length * 20, 100)
-        : undefined,
-    };
+  const clearResume = () => {
+    setResumeFile(null);
+    setAnalysisResult(null);
+    setAnalysisError(null);
   };
 
-  const isLoading = isContextLoading;
-  const error = contextError;
+  const handleAnalyze = async () => {
+    if (!resumeFile) return;
+
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    setAnalysisResult(null);
+
+    try {
+      const result = await analyzeResume(resumeFile);
+      if (!result.success || (result.error && result.jobs.length === 0)) {
+        setAnalysisError(result.error || 'No results found');
+      } else {
+        setAnalysisResult(result);
+      }
+    } catch (err: any) {
+      setAnalysisError(err.message || 'Failed to analyze resume');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream-50 text-cobalt-900">
       <Helmet>
-        <title>Job Search | CareerSync</title>
+        <title>AI Job Matcher | CareerSync</title>
       </Helmet>
 
       <Navbar />
@@ -119,123 +74,213 @@ const Search = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 md:px-6">
 
-          {/* 🔥 HEADER WITH RESUME + SEARCH */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              Find Your Perfect Career Match
+          {/* HEADER */}
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 bg-cobalt-50 text-cobalt-600 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+              <Sparkles className="h-4 w-4" />
+              Powered by ConvDeepFM + BERT + Groq LLM
+            </div>
+            <h1 className="text-4xl font-bold mb-3">
+              AI-Powered Job Matcher
             </h1>
-
-            <p className="text-cobalt-600/60 mb-6">
-              Upload your resume and get AI-powered job recommendations
+            <p className="text-cobalt-600/60 max-w-2xl mx-auto">
+              Upload your resume and our AI will parse your skills, scrape live job listings,
+              and score each match using our CNN model.
             </p>
+          </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-
-              {/* Resume Upload */}
-              <div className="bg-white border border-cobalt-100/50 rounded-xl p-4 flex items-center gap-3 shadow-card w-full md:w-1/3">
-                <div className="bg-cobalt-50 p-2 rounded-lg">
-                  <Upload className="h-5 w-5 text-cobalt-600" />
+          {/* RESUME UPLOAD CARD */}
+          <div className="max-w-2xl mx-auto mb-10">
+            <div className="bg-white border border-cobalt-100/50 rounded-2xl p-6 shadow-card">
+              <div className="flex items-center gap-4">
+                <div className="bg-cobalt-50 p-3 rounded-xl">
+                  <Upload className="h-6 w-6 text-cobalt-600" />
                 </div>
 
-                <div className="flex-1">
-                  <label className="text-sm font-medium text-cobalt-700 cursor-pointer">
-                    Upload Resume (PDF)
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleResumeUpload}
-                      className="hidden"
-                    />
-                  </label>
-
-                  <p className="text-xs text-cobalt-400">
-                    {resumeFile ? resumeFile.name : 'No file selected'}
-                  </p>
+                <div className="flex-1 min-w-0">
+                  {resumeFile ? (
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-cobalt-500 shrink-0" />
+                      <span className="text-sm font-medium text-cobalt-700 truncate">
+                        {resumeFile.name}
+                      </span>
+                      <button onClick={clearResume} className="shrink-0 p-1 hover:bg-cobalt-100 rounded-lg">
+                        <X className="h-4 w-4 text-cobalt-400" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <span className="text-base font-medium text-cobalt-700">
+                        Upload your resume
+                      </span>
+                      <p className="text-sm text-cobalt-400 mt-0.5">
+                        PDF or DOCX, max 10MB
+                      </p>
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,.doc"
+                        onChange={handleResumeUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                 </div>
-              </div>
 
-              {/* Search Bar */}
-              <div className="flex-1">
-                <SearchBar />
+                {resumeFile && (
+                  <button
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing}
+                    className="cs-btn-primary px-6 py-2.5 text-sm rounded-xl flex items-center gap-2 shrink-0 disabled:opacity-50"
+                  >
+                    {isAnalyzing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Brain className="h-4 w-4" />
+                    )}
+                    {isAnalyzing ? 'Analyzing...' : 'Find Matching Jobs'}
+                  </button>
+                )}
               </div>
-
             </div>
           </div>
+
+          {/* ANALYZING STATE */}
+          {isAnalyzing && (
+            <div className="text-center py-16">
+              <Loader2 className="h-12 w-12 animate-spin text-cobalt-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-cobalt-700 mb-2">
+                Analyzing Your Resume
+              </h3>
+              <p className="text-cobalt-500 max-w-md mx-auto">
+                Parsing skills, scraping live job listings, and scoring matches with our AI model.
+                This may take a minute...
+              </p>
+            </div>
+          )}
+
+          {/* ERROR STATE */}
+          {analysisError && !isAnalyzing && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                <p className="text-red-600 font-medium">{analysisError}</p>
+                <button
+                  onClick={handleAnalyze}
+                  className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* RESULTS */}
-          <div className="flex-1">
-
-            {/* Header */}
-            <div className="bg-white rounded-xl border border-cobalt-100/50 shadow-subtle p-4 mb-6 flex justify-between items-center">
-              <h2 className="text-lg font-semibold">
-                {isLoading
-                  ? 'Searching...'
-                  : `${filteredJobs.length} jobs found`}
-              </h2>
-
-              <div className="flex items-center gap-4">
-                <select
-                  className="bg-cream-50 rounded-lg px-3 py-2 border border-cobalt-100 text-sm"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="relevance">Relevance</option>
-                  <option value="newest">Newest</option>
-                  <option value="match">Match Score</option>
-                </select>
-
-                <div className="flex border rounded-lg">
-                  <button
-                    className={`p-2 ${viewMode === 'grid'
-                        ? 'bg-cobalt-600 text-white'
-                        : ''
-                      }`}
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className="h-5 w-5" />
-                  </button>
-
-                  <button
-                    className={`p-2 ${viewMode === 'list'
-                        ? 'bg-cobalt-600 text-white'
-                        : ''
-                      }`}
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="h-5 w-5" />
-                  </button>
+          {analysisResult && !isAnalyzing && (
+            <>
+              {/* Profile Summary */}
+              <div className="bg-white rounded-xl border border-cobalt-100/50 shadow-subtle p-5 mb-6">
+                <h3 className="font-semibold text-cobalt-800 mb-3">Analysis Summary</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-cobalt-400 block">Domain</span>
+                    <span className="font-medium">{analysisResult.candidate_domain}</span>
+                  </div>
+                  <div>
+                    <span className="text-cobalt-400 block">Skills Detected</span>
+                    <span className="font-medium">{analysisResult.candidate_skills_count}</span>
+                  </div>
+                  <div>
+                    <span className="text-cobalt-400 block">Jobs Analyzed</span>
+                    <span className="font-medium">{analysisResult.total_analyzed}</span>
+                  </div>
+                  <div>
+                    <span className="text-cobalt-400 block">Parse Method</span>
+                    <span className="font-medium">{analysisResult.parse_source}</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Results Header */}
+              <div className="bg-white rounded-xl border border-cobalt-100/50 shadow-subtle p-4 mb-6 flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  {analysisResult.jobs.length} AI-Matched Jobs
+                </h2>
+                <span className="text-xs text-cobalt-400">
+                  Ranked by CNN model + skill overlap + semantic similarity
+                </span>
+              </div>
+
+              {/* AI Job Cards */}
+              {analysisResult.jobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {analysisResult.jobs.map((job, i) => (
+                    <div key={`${job.role}-${job.company}-${i}`}>
+                      <div className="relative">
+                        <div className="absolute -top-2 -right-2 z-10 bg-cobalt-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {job.match_score}% match
+                        </div>
+                        <AIJobCard job={job} />
+                      </div>
+                      {/* Skills section */}
+                      <div className="bg-white rounded-b-xl border border-t-0 border-cobalt-100/50 px-5 pb-4 -mt-1">
+                        {job.matching_skills.length > 0 && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-emerald-600">Matched: </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {job.matching_skills.slice(0, 6).map((skill) => (
+                                <span key={skill} className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs">
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.matching_skills.length > 6 && (
+                                <span className="text-xs text-cobalt-400">+{job.matching_skills.length - 6}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {job.missing_skills.length > 0 && (
+                          <div>
+                            <span className="text-xs font-medium text-amber-600">To learn: </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {job.missing_skills.slice(0, 4).map((skill) => (
+                                <span key={skill} className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-xs">
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.missing_skills.length > 4 && (
+                                <span className="text-xs text-cobalt-400">+{job.missing_skills.length - 4}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Briefcase className="h-12 w-12 text-cobalt-300 mx-auto mb-3" />
+                  <p className="text-cobalt-500">No matching jobs found. Try a different resume.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* EMPTY STATE — no resume uploaded yet, no results */}
+          {!resumeFile && !analysisResult && !isAnalyzing && !analysisError && (
+            <div className="text-center py-16">
+              <div className="bg-cobalt-50 h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <Brain className="h-10 w-10 text-cobalt-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-cobalt-700 mb-2">
+                Upload your resume to get started
+              </h3>
+              <p className="text-cobalt-500 max-w-md mx-auto">
+                Our AI will extract your skills, find relevant job listings from LinkedIn,
+                and rank them using a deep learning model trained on real job-matching data.
+              </p>
             </div>
+          )}
 
-            {/* Job Results */}
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
-            ) : filteredJobs.length > 0 ? (
-              <div
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
-                    : 'space-y-4'
-                }
-              >
-                {filteredJobs.map((job: any) => (
-                  <JobCard
-                    key={job.job_id}
-                    job={transformJobForCard(job)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-8">
-                <SearchIcon className="mx-auto mb-3" />
-                <p>No jobs found</p>
-              </div>
-            )}
-
-          </div>
         </div>
       </main>
 

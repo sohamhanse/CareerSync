@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRecommendedJobs } from '@/services/api';
 import {
   Loader2,
   Sparkles,
@@ -72,14 +71,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const { user } = useAuth();
 
-  const { data: recData, isLoading: recLoading } = useQuery({
-    queryKey: ['recommended-jobs'],
-    queryFn: getRecommendedJobs,
-    enabled: !!user,
-  });
-
-  const recommendedJobs = recData?.data?.jobs || [];
-  const needsProfile = recData?.data?.needs_profile || false;
+  const recLoading = false;
+  const recommendedJobs: any[] = [];
+  const needsProfile = false;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();

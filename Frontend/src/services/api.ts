@@ -1,6 +1,6 @@
-import type { ApiResponse, AuthUser, UserProfile, SearchParams, SearchResults, Job } from "./api.types";
+import type { ApiResponse, AuthUser, UserProfile, RecommendationResponse } from "./api.types";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 const TOKEN_KEY = "auth_token";
 
 const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
@@ -58,21 +58,7 @@ export const updateProfile = (data: Partial<UserProfile>) =>
     body: JSON.stringify(data),
   });
 
-// ── Jobs ───────────────────────────────────────────────
-export const searchJobs = async (params: SearchParams) => {
-  const res = await request<SearchResults>("/api/jobs/search", {
-    method: "POST",
-    body: JSON.stringify(params),
-  });
-  // Keep existing behaviour: store in localStorage for JobDetail page
-  if (res.success) {
-    localStorage.setItem("searchResults", JSON.stringify({ success: true, data: res.data }));
-  }
-  return res;
-};
-
-export const getRecommendedJobs = () =>
-  request<{ jobs: Job[]; results_count: number; needs_profile: boolean }>("/api/jobs/recommended");
+// ── Jobs (via ML backend only) ────────────────────────
 
 // ── Saved Jobs ─────────────────────────────────────────
 export const getSavedJobs = () =>
@@ -108,6 +94,44 @@ export const updateApplicationStatus = (id: string, status: string) =>
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
+
+// ── Resume Analysis (ML Backend) ──────────────────────────
+// In dev, Vite proxies /ml-api/* → http://localhost:8000/*
+// In prod, set VITE_ML_API_URL to the deployed ML backend URL.
+
+export const analyzeResume = async (file: File): Promise<RecommendationResponse> => {
+  const formData = new FormData();
+  formData.append("resume", file);
+
+  const token = getToken();
+
+  let res: Response;
+  try {
+    res = await fetch("/ml-api/analyze-resume", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      // No Content-Type header — browser sets multipart boundary automatically
+      body: formData,
+    });
+  } catch (networkErr) {
+    throw new Error(
+      "Cannot reach the ML backend. Make sure the FastAPI server is running on port 8000."
+    );
+  }
+
+  let json: RecommendationResponse;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error(`Server returned non-JSON response (HTTP ${res.status})`);
+  }
+
+  if (!res.ok) {
+    throw new Error((json as any).error || (json as any).detail || `Resume analysis failed (HTTP ${res.status})`);
+  }
+
+  return json;
+};
 
 // ── Notifications (stubs — wire to DB later) ──────────
 export const getNotifications = async () => ({ data: { notifications: [], unreadCount: 0 } });

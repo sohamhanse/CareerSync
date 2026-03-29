@@ -1,0 +1,573 @@
+
+================================================================================
+✅ ConvDeepFM V1 + Groq LLM JOB RECOMMENDATION SYSTEM READY!
+================================================================================
+
+📤 UPLOAD YOUR RESUME (PDF or DOCX)
+================================================================================
+Sangram S Patil Resume.pdf
+Sangram S Patil Resume.pdf(application/pdf) - 107293 bytes, last modified: 28/3/2026 - 100% done
+Saving Sangram S Patil Resume.pdf to Sangram S Patil Resume (3).pdf
+
+✅ Uploaded: Sangram S Patil Resume (3).pdf
+✅ Groq LLM client initialised
+
+================================================================================
+📥 LOADING ConvDeepFM V1 MODEL & ARTIFACTS
+================================================================================
+Loading weights: 100%
+ 103/103 [00:00<00:00, 453.41it/s, Materializing param=pooler.dense.weight]
+BertModel LOAD REPORT from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  CNN kernels used: [2, 3, 4] (fields=5)
+✅ All V1 artifacts loaded!
+
+================================================================================
+🚀 STARTING JOB RECOMMENDATION  [Groq LLM + ConvDeepFM V1]
+================================================================================
+
+📄 Parsing: Sangram S Patil Resume (3).pdf
+============================================================
+
+🤖 PASS 1: Groq LLM parsing (primary)...
+   Model : llama-3.3-70b-versatile
+   Tasks : resume parsing + domain detection + job title detection
+   ✅ LLM extracted:
+      Skills          : 20 (Communication, English, Event Management, Food Production, Food and Beverage Service, French...)
+      Experience      : 7.42 years
+      Education       : MSc.FS
+      Job title       : Hospitality Trainer and Event Manager
+      Domains (raw)   : ['Hospitality', 'Education', 'Event Management']
+   LLM suggested domains : ['Hospitality', 'Education', 'Event Management']
+   ℹ️  LLM domain(s) not in taxonomy (dropped): Event Management
+   ✅ Using LLM domains (trusted): ['Hospitality', 'Education']
+
+✅ RESUME PARSED SUCCESSFULLY  [groq-llm (domain-keyword fallback only)]
+   Skills detected : 20
+   Experience      : 7.42 years
+   Education       : MSc.FS
+   Primary domain  : Hospitality
+   Job title       : Hospitality Trainer and Event Manager
+   Top skills      : Communication, English, Event Management, Food Production, Food and Beverage Service, French, Front Office, German, Hospitality Management, Housekeeping
+
+============================================================
+🧠 DOMAIN DETECTION  [source: GROQ-LLM (DOMAIN-KEYWORD FALLBACK ONLY)]
+============================================================
+
+  🥇 PRIMARY  Hospitality
+  Score : [█░░░░░░░░░░░░░░] 1 skill(s) matched
+  Skills: Front Office
+
+  🥈 #2  Education
+  Score : [░░░░░░░░░░░░░░░] 0 skill(s) matched
+
+  ─── Other detected domains (not searched) ───
+  • Accounting                (1 skill match)
+  • Creative                  (1 skill match)
+
+  ✅ Job search will cover: Hospitality, Education
+============================================================
+
+🔍 SCRAPING JOBS
+============================================================
+   Location: India  |  Sites: indeed, linkedin
+   🤖 LLM job title (primary search): 'Hospitality Trainer and Event Manager'
+   Search Terms: Hospitality Trainer and Event Manager, Hotel Management, Teacher, Hotel Manager, Hospitality Executive
+   🔎 Searching: 'Hospitality Trainer and Event Manager'...
+      → 3 jobs
+   🔎 Searching: 'Hotel Management'...
+      → 100 jobs
+   🔎 Searching: 'Teacher'...
+      → 100 jobs
+   🔎 Searching: 'Hotel Manager'...
+      → 100 jobs
+   🔎 Searching: 'Hospitality Executive'...
+      → 80 jobs
+✅ Scraped 331 unique jobs across 5 term(s)
+
+   🏷️  Domain type : NON-TECH → LLM skill enrichment runs for ALL domains
+
+🔧 PROCESSING 331 JOBS
+============================================================
+   🤖 LLM enriching 286 jobs (regex <3 skills) — NON-TECH mode...
+   ✅ LLM enriched 281 jobs with domain-specific skills
+✅ Processed 331 jobs
+
+================================================================================
+🎯 GENERATING RECOMMENDATIONS
+================================================================================
+
+   ⚙️  Scoring mode : NON-TECH
+   Weights : ConvDeepFM=0.5  LLM_skill_overlap=0.15  BERT_sem_sim=0.35
+   Signal source : Groq LLM (skills) + Sentence-BERT (embeddings) + ConvDeepFM (model)
+Scoring jobs: 100%|██████████| 331/331 [01:32<00:00,  3.56it/s]
+================================================================================
+🎯 TOP JOB RECOMMENDATIONS
+================================================================================
+
+📊 CANDIDATE PROFILE:
+   ✓ Skills:     20
+   ✓ Experience: 7.42 years
+   ✓ Education:  MSc.FS
+   ✓ Domain:     Hospitality
+   ✓ Job Title:  Hospitality Trainer and Event Manager
+   ✓ Location:   India
+   ✓ Parsed via: groq-llm (domain-keyword fallback only)
+
+📈 SCORE DISTRIBUTION:
+   Model : 0.47–0.49 (avg 0.48)
+   Skill : 0.00–0.40 (avg 0.16)
+   Final : 0.47–0.55 (avg 0.50)
+
+================================================================================
+TOP 40 JOB RECOMMENDATIONS
+================================================================================
+
+1. Life Skills Trainer
+🏢 Narayana e-Techno School
+📍 MH, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:54.7%  Model:47.9%  Skill:28.6%  SemSim:55.1%
+✅ Matching (2): Leadership, Communication
+📚 To learn: Life Skills Training, Employability Skills, Event Coordination
+🔗 https://in.indeed.com/viewjob?jk=b17aaf70fa71519b...
+--------------------------------------------------------------------------------
+
+2. PET Teacher
+🏢 D.A.V. Amaravathy Rythu School
+📍 AP, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:54.1%  Model:48.0%  Skill:28.6%  SemSim:53.7%
+✅ Matching (2): Leadership, Communication
+📚 To learn: Physical Training, Sports, Fitness
+🔗 https://in.indeed.com/viewjob?jk=89746cc9754223f0...
+--------------------------------------------------------------------------------
+
+3. Hotel Manager
+🏢 Novello globe hotel & Resorts PVT LTD
+📍 UL, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:53.3%  Model:48.1%  Skill:30.0%  SemSim:50.9%
+✅ Matching (3): Housekeeping, Time Management, Leadership
+📚 To learn: Hotel Management, Guest Services, Staff Management
+🔗 https://in.indeed.com/viewjob?jk=c1a33a604dd40160...
+--------------------------------------------------------------------------------
+
+4. Tele Caller Executive
+🏢 Bharathan Holdings and Hospitaity
+📍 KL, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:52.4%  Model:47.3%  Skill:27.3%  SemSim:51.0%
+✅ Matching (3): English, Communication, Time Management
+📚 To learn: Sales, Customer Service, Tele Calling
+🔗 https://in.indeed.com/viewjob?jk=52e26cc090be739b...
+--------------------------------------------------------------------------------
+
+5. Associate Director of Catering Sales
+🏢 Marriott International
+📍 GA, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:52.1%  Model:48.2%  Skill:23.1%  SemSim:63.1%
+✅ Matching (3): Leadership, Time Management, Communication
+📚 To learn: Human Resources, Sales, Marketing
+🔗 https://in.indeed.com/viewjob?jk=46f7911e9e7f5878...
+--------------------------------------------------------------------------------
+
+6. Field Officer
+🏢 nan
+📍 UP, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:51.8%  Model:47.9%  Skill:27.3%  SemSim:48.7%
+✅ Matching (3): Time Management, Leadership, Communication
+📚 To learn: Security Guard Services, Supervision, Discipline
+🔗 https://in.indeed.com/viewjob?jk=6b7891ab8948dbf9...
+--------------------------------------------------------------------------------
+
+7. Customer Support Executive – Travel & Hospitality (Voice Process)
+🏢 Jumiva
+📍 HR, IN | Full-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:51.8%  Model:47.6%  Skill:20.0%  SemSim:57.9%
+✅ Matching (2): Communication, English
+📚 To learn: Customer Support, Travel and Hospitality, Problem Solving
+🔗 https://in.indeed.com/viewjob?jk=21f51471c16862c0...
+--------------------------------------------------------------------------------
+
+8. Dir-Restaurants
+🏢 Marriott International
+📍 CH, IN | Full-time
+💼 Experience: 6yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:51.7%  Model:48.2%  Skill:25.0%  SemSim:48.9%
+✅ Matching (1): Event Management
+📚 To learn: Accounting, Forecasting, Human Resources
+🔗 https://in.indeed.com/viewjob?jk=ac1c954389802ae6...
+--------------------------------------------------------------------------------
+
+9. Food and Beverage Executive
+🏢 Marriott International
+📍 MH, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:51.4%  Model:47.9%  Skill:10.0%  SemSim:55.0%
+✅ Matching (1): Time Management
+📚 To learn: LESS, Team Management, Service Quality
+🔗 https://in.indeed.com/viewjob?jk=42c7e1ef38795f49...
+--------------------------------------------------------------------------------
+
+10. F & B Executive
+🏢 Marriott International
+📍 KL, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.8%  Model:47.6%  Skill:25.0%  SemSim:47.6%
+✅ Matching (3): Time Management, Leadership, Communication
+📚 To learn: LESS, Team Management, Customer Service
+🔗 https://in.indeed.com/viewjob?jk=63f841cefae90c24...
+--------------------------------------------------------------------------------
+
+11. Front Office Manager
+🏢 Marriott International
+📍 MH, IN | Full-time
+💼 Experience: 4yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.8%  Model:47.8%  Skill:27.3%  SemSim:58.3%
+✅ Matching (3): Leadership, Communication, Time Management
+📚 To learn: Front Office Management, Problem Solving, Guest Services
+🔗 https://in.indeed.com/viewjob?jk=588eaa950afd6819...
+--------------------------------------------------------------------------------
+
+12. Biology Faculty
+🏢 BEHERE EDUCATIONAL INSTITUTE PVT LTD
+📍 MH, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:50.7%  Model:47.2%  Skill:11.1%  SemSim:53.8%
+✅ Matching (1): Communication
+📚 To learn: Teaching, Biology, Education
+🔗 https://in.indeed.com/viewjob?jk=4ab12ffdf9511a45...
+--------------------------------------------------------------------------------
+
+13. Demi Chef de Partie
+🏢 Marriott International
+📍 MP, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.6%  Model:48.3%  Skill:20.0%  SemSim:48.2%
+✅ Matching (3): Communication, Time Management, Food and Beverage Service
+📚 To learn: LESS, Food Preparation, Cooking
+🔗 https://in.indeed.com/viewjob?jk=0e997eda5c61b860...
+--------------------------------------------------------------------------------
+
+14. Assistant Restaurant Manager
+🏢 Marriott International
+📍 GA, IN | Full-time
+💼 Experience: 4yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.5%  Model:48.3%  Skill:30.0%  SemSim:55.7%
+✅ Matching (3): Training and Development, Food and Beverage Service, Leadership
+📚 To learn: Restaurant Management, Menu Planning, Sanitation Standards
+🔗 https://in.indeed.com/viewjob?jk=c97bcc84ae4edfa8...
+--------------------------------------------------------------------------------
+
+15. HR Executive
+🏢 Savannah Serenity Pvt.Ltd
+📍 MH, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:50.5%  Model:47.7%  Skill:0.0%  SemSim:69.2%
+📚 To learn: HR, Payroll, Performance Management
+🔗 https://in.indeed.com/viewjob?jk=9f7ce7f1a84ae20f...
+--------------------------------------------------------------------------------
+
+16. Guest Service Executive
+🏢 Odespa wellness
+📍 TS, IN | Full-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.4%  Model:48.5%  Skill:27.3%  SemSim:50.0%
+✅ Matching (3): English, Communication, Time Management
+📚 To learn: Sales, Guest Service, Spa Management
+🔗 https://in.indeed.com/viewjob?jk=ce1da2d7fcb6b588...
+--------------------------------------------------------------------------------
+
+17. Demi Chef de Partie - Cafeteria
+🏢 Marriott International
+📍 KA, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:50.3%  Model:47.7%  Skill:20.0%  SemSim:48.1%
+✅ Matching (3): Communication, Time Management, Food and Beverage Service
+📚 To learn: LESS, Food Preparation, Cooking
+🔗 https://in.indeed.com/viewjob?jk=81ae3519b68d5c83...
+--------------------------------------------------------------------------------
+
+18. Assistant Manager - Housekeeping
+🏢 Accor
+📍 TS, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.9%  Model:47.6%  Skill:25.0%  SemSim:45.2%
+✅ Matching (3): Leadership, Communication, Time Management
+📚 To learn: Hotel Management, Housekeeping Management, Team Management
+🔗 https://in.indeed.com/viewjob?jk=fbf7e0e5f67fa4e1...
+--------------------------------------------------------------------------------
+
+19. PRT / TGT / PGT Teachers
+🏢 New Horizon Group Of School
+📍 MH, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.7%  Model:47.0%  Skill:14.3%  SemSim:61.9%
+✅ Matching (2): German, English
+📚 To learn: HR, Teaching, Hindi
+🔗 https://in.indeed.com/viewjob?jk=b907be71cf584218...
+--------------------------------------------------------------------------------
+
+20. Sales Executive / Sales Manager
+🏢 WOWIDAYS HOSPITALITY AND TOURISM PRIVATE LIMITED”
+📍 TS, IN | Full-time
+💼 Experience: 5yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.6%  Model:48.1%  Skill:18.2%  SemSim:58.4%
+✅ Matching (2): Communication, Time Management
+📚 To learn: Sales, Marketing, Negotiation
+🔗 https://in.indeed.com/viewjob?jk=f8c89eb09a9d952c...
+--------------------------------------------------------------------------------
+
+21. Regional Sales Manager
+🏢 Newtron Talent Solutions
+📍 KL, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.3%  Model:47.6%  Skill:7.7%  SemSim:51.3%
+✅ Matching (1): Communication
+📚 To learn: CRM, Sales, Field Sales
+🔗 https://in.indeed.com/viewjob?jk=f4f1486baf267031...
+--------------------------------------------------------------------------------
+
+22. Trainer/Facilitator
+🏢 MNG ACADEMY PVT LTD
+📍 WB, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.2%  Model:47.6%  Skill:20.0%  SemSim:57.3%
+✅ Matching (2): Communication, Time Management
+📚 To learn: Hotel Management, Guest Service, Customer Service
+🔗 https://in.indeed.com/viewjob?jk=113ead8f7bbc9545...
+--------------------------------------------------------------------------------
+
+23. English Teacher
+🏢 Takalkar Classes 
+📍 MH, IN | Part-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.2%  Model:47.0%  Skill:0.0%  SemSim:60.6%
+📚 To learn: Teaching, English Teaching, CBSE
+🔗 https://in.indeed.com/viewjob?jk=922517cff27561c7...
+--------------------------------------------------------------------------------
+
+24. Senior Executive-HR & Admin
+🏢 ANK HOSPITALITY LLP
+📍 AS, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:49.0%  Model:48.0%  Skill:0.0%  SemSim:53.2%
+📚 To learn: Employee Engagement, HR, HRIS
+🔗 https://in.indeed.com/viewjob?jk=841df79928fe75e0...
+--------------------------------------------------------------------------------
+
+25. Assistant Director of Finance
+🏢 Marriott International
+📍 GA, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:49.0%  Model:47.9%  Skill:0.0%  SemSim:53.3%
+📚 To learn: Accounting, Budgeting, Financial Analysis
+🔗 https://in.indeed.com/viewjob?jk=9c8c3deb654ccdf1...
+--------------------------------------------------------------------------------
+
+26. Spa Duty Manager-Hotel
+🏢 Odespa wellness
+📍 GJ, IN | Full-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:48.8%  Model:47.7%  Skill:15.8%  SemSim:52.0%
+✅ Matching (3): Leadership, Communication, Time Management
+📚 To learn: Sales, Spa Operations, Team Management
+🔗 https://in.indeed.com/viewjob?jk=e0b45c30a5da60c2...
+--------------------------------------------------------------------------------
+
+27. Training & Placement Officer
+🏢 SUN EDUCATIONAL INSTITUTIONS
+📍 TS, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.7%  Model:47.9%  Skill:0.0%  SemSim:64.1%
+📚 To learn: HR, Hotel Management, R
+🔗 https://in.indeed.com/viewjob?jk=0b75f1332907467a...
+--------------------------------------------------------------------------------
+
+28. PRT Teacher
+🏢 nan
+📍 HR, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.7%  Model:47.4%  Skill:0.0%  SemSim:53.1%
+📚 To learn: Teaching, Primary Teaching, PRT
+🔗 https://in.indeed.com/viewjob?jk=5ccb24bad71dd425...
+--------------------------------------------------------------------------------
+
+29. Sales Manager
+🏢 Sapphire Sky Hotel
+📍 UL, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.6%  Model:48.5%  Skill:0.0%  SemSim:51.5%
+📚 To learn: CRM, Sales, Sales Management
+🔗 https://in.indeed.com/viewjob?jk=8b4093a6f079761a...
+--------------------------------------------------------------------------------
+
+30. Back Office Executive
+🏢 Terrier Security Services
+📍 DL, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.6%  Model:47.5%  Skill:20.0%  SemSim:55.9%
+✅ Matching (2): Communication, Time Management
+📚 To learn: MIS Executive, Customer Service, Reservation Management
+🔗 https://in.indeed.com/viewjob?jk=0a8cadfae98c37f0...
+--------------------------------------------------------------------------------
+
+31. Assistant Manager - Finance
+🏢 IHCL
+📍 MH, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.5%  Model:48.6%  Skill:0.0%  SemSim:51.2%
+📚 To learn: Accounting, CA, Financial Reporting
+🔗 https://in.indeed.com/viewjob?jk=dccd58bd7d8dd452...
+--------------------------------------------------------------------------------
+
+32. Restaurant Manager
+🏢 Marriott International
+📍 HR, IN | Full-time
+💼 Experience: 4yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:48.5%  Model:47.8%  Skill:25.0%  SemSim:53.0%
+✅ Matching (3): Leadership, Communication, Time Management
+📚 To learn: Food and Beverage, Restaurant Management, Menu Planning
+🔗 https://in.indeed.com/viewjob?jk=e0836b09dfd3bd2c...
+--------------------------------------------------------------------------------
+
+33. F&B Supervisor – Restaurant Operations
+🏢 Tiki Farms Hospitality LLP
+📍 MH, IN | Full-time
+💼 Experience: 5yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.5%  Model:48.0%  Skill:40.0%  SemSim:46.2%
+✅ Matching (4): Food and Beverage Service, Event Management, Time Management, Communication
+📚 To learn: ERP, Sales, Restaurant Operations
+🔗 https://in.indeed.com/viewjob?jk=0543757828be4f75...
+--------------------------------------------------------------------------------
+
+34. Territory Sales Executive – Resort/ Hotel Sales (Mumbai)
+🏢 Tiki Farms Hospitality LLP
+📍 MH, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.1%  Model:47.7%  Skill:15.4%  SemSim:56.2%
+✅ Matching (2): Communication, Time Management
+📚 To learn: Excel, Sales, Sales and Marketing
+🔗 https://in.indeed.com/viewjob?jk=c98ec2d2fc5911df...
+--------------------------------------------------------------------------------
+
+35. Primary Science & math Teacher
+🏢 Ram Ratna International School
+📍 MH, IN | Full-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.1%  Model:47.2%  Skill:14.3%  SemSim:51.5%
+✅ Matching (1): Communication
+📚 To learn: Teaching, BSC/MSC, B.Ed
+🔗 https://in.indeed.com/viewjob?jk=9f9044b7fda19b7d...
+--------------------------------------------------------------------------------
+
+36. HR Executive
+🏢 The Byke Hospitality Ltd
+📍 GA, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:48.0%  Model:47.7%  Skill:0.0%  SemSim:62.4%
+📚 To learn: HR, Payroll, Recruitment
+🔗 https://in.indeed.com/viewjob?jk=ba4ec0d9f52b115c...
+--------------------------------------------------------------------------------
+
+37. Admission Counselor
+🏢 NFCI Global Pvt Ltd
+📍 HP, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:47.9%  Model:47.7%  Skill:20.0%  SemSim:53.6%
+✅ Matching (2): Communication, Time Management
+📚 To learn: Sales, Counseling, Career Counseling
+🔗 https://in.indeed.com/viewjob?jk=10bb27df48f01c68...
+--------------------------------------------------------------------------------
+
+38. Senior HR Executive
+🏢 SUNSTAR CASTECH PVT LTD
+📍 GJ, IN | Full-time
+💼 Experience: 3yr required ⚠️ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:47.7%  Model:48.6%  Skill:16.7%  SemSim:53.2%
+✅ Matching (1): Event Management
+📚 To learn: Employee Engagement, HR, Payroll
+🔗 https://in.indeed.com/viewjob?jk=bb9ddd0299482996...
+--------------------------------------------------------------------------------
+
+39. Supervisor-Human Resources
+🏢 Marriott International
+📍 CH, IN | Full-time
+💼 Experience: 7yr required ✅ (You: 7.42)
+📅 Posted: 2026-03-27
+📊 Final:47.6%  Model:48.6%  Skill:0.0%  SemSim:48.9%
+📚 To learn: Human Resources, LESS, Logistics
+🔗 https://in.indeed.com/viewjob?jk=93ff426afbceeb1e...
+--------------------------------------------------------------------------------
+
+40. Housekeeping Executive
+🏢 IHCL
+📍 UL, IN | Full-time
+💼 Experience: 0yr required ❌ (You: 7.42)
+📅 Posted: 2026-03-28
+📊 Final:47.5%  Model:47.9%  Skill:15.4%  SemSim:48.4%
+✅ Matching (2): Housekeeping, Time Management
+📚 To learn: HR, Inventory Management, Hospitality
+🔗 https://in.indeed.com/viewjob?jk=273dfe46999e7836...
+--------------------------------------------------------------------------------
+
+✅ Results saved to job_recommendations.json
+
+================================================================================
+🎯 SYSTEM FEATURES:
+  ✓ Groq LLM (llama-3.3-70b-versatile) for resume parsing — PRIMARY
+  ✓ LLM domain suggestions TRUSTED as-is (LLM ordering preserved)
+  ✓ Domain keyword set used ONLY as fallback (LLM unavailable / no valid labels)
+  ✓ Keyword-regex fallback for all fields if Groq API unavailable
+  ✓ LLM job title detection (always from LLM, no keyword override)
+  ✓ ConvDeepFM V1: BERT embeddings (all-MiniLM-L6-v2, 384-dim)
+  ✓ Trained on 11,766 samples | experience-gap modifier
+  ✓ Real-time job scraping — Indeed & LinkedIn
+================================================================================

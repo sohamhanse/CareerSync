@@ -12,6 +12,11 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/ml-api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ml-api/, ''),
+      },
     },
   },
   plugins: [

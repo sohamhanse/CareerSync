@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { SearchProvider } from "@/contexts/SearchContext";
 import { HelmetProvider } from "react-helmet-async";
 import { AnimatePresence, motion } from "framer-motion";
 import Index from "./pages/Index";
@@ -103,9 +102,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <SearchProvider>
-              <AnimatedRoutes />
-            </SearchProvider>
+            <AnimatedRoutes />
           </AuthProvider>
         </BrowserRouter>
       </HelmetProvider>

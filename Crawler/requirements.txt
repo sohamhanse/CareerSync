@@ -1,5 +1,0 @@
-jobspy
-pandas
-nltk
-requests
-numpy

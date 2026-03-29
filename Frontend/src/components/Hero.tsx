@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import SearchBar from './SearchBar';
 import DownloadAppSection from './AppSection';
 import { ChevronDown } from 'lucide-react';
 

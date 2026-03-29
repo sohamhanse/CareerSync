@@ -7,9 +7,7 @@ const schema = z.object({
   MONGODB_URI: z.string().min(1),
   JWT_SECRET: z.string().min(16),
   JWT_EXPIRES_IN: z.string().default("7d"),
-  PYTHON_EXECUTABLE: z.string().default("python3"),
-  CRAWLER_PATH: z.string().default("../Crawler"),
-  CORS_ORIGIN: z.string().default("http://localhost:8081"),
+  CORS_ORIGIN: z.string().default("http://localhost:8080"),
 });
 
 const parsed = schema.safeParse(process.env);
