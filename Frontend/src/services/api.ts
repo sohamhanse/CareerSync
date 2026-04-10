@@ -99,9 +99,12 @@ export const updateApplicationStatus = (id: string, status: string) =>
 // In dev, Vite proxies /ml-api/* → http://localhost:8000/*
 // In prod, set VITE_ML_API_URL to the deployed ML backend URL.
 
-export const analyzeResume = async (file: File): Promise<RecommendationResponse> => {
+export const analyzeResume = async (file: File, location?: string): Promise<RecommendationResponse> => {
   const formData = new FormData();
   formData.append("resume", file);
+  if (location) {
+    formData.append("location", location);
+  }
 
   const token = getToken();
 

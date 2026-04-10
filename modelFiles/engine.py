@@ -473,7 +473,8 @@ class GroqLLMClient:
                  most recent role, skills, and experience level. Be specific:
                  e.g. 'Senior Machine Learning Engineer', 'Chartered Accountant', 'Full-Stack Developer',
                  'Digital Marketing Manager' — NOT generic terms like 'Engineer' or 'Executive'>",
-  "seniority": "<one of: Fresher | Junior | Mid-level | Senior | Lead | Manager | Director | Executive>"
+  "seniority": "<one of: Fresher | Junior | Mid-level | Senior | Lead | Manager | Director | Executive>",
+  "location": "<candidate's current city/state/country from the resume. Look for addresses, phone area codes, or stated locations. e.g. 'Bangalore, India', 'San Francisco, CA'. Return empty string if not found.>"
 }}
 
 === RULES ===
@@ -507,6 +508,7 @@ class GroqLLMClient:
             'domains_raw': parsed.get('domains', []) or [],
             'job_title': str(parsed.get('job_title', '')),
             'seniority': str(parsed.get('seniority', '')),
+            'location': str(parsed.get('location', '')),
         }
         if not isinstance(result['skills'], list):
             result['skills'] = []
@@ -996,6 +998,9 @@ class ResumeParser:
             print(f"[RESUME] PASS 2 DONE — {len(skills)} skills via regex")
 
         domain = domains[0][0]
+        candidate_location = ''
+        if llm_success and llm_result.get('location'):
+            candidate_location = llm_result['location']
         return {
             'skills': skills,
             'experience_years': experience_years,
@@ -1006,6 +1011,7 @@ class ResumeParser:
             'seniority': llm_result.get('seniority', '') if llm_success else '',
             'resume_text': text,
             'parse_source': parse_source,
+            'location': candidate_location,
         }
 
     def parse_resume_from_text(self, text: str,
@@ -1045,6 +1051,9 @@ class ResumeParser:
             parse_source = "keyword-regex"
 
         domain = domains[0][0]
+        candidate_location = ''
+        if llm_success and llm_result.get('location'):
+            candidate_location = llm_result['location']
         return {
             'skills': skills,
             'experience_years': experience_years,
@@ -1054,6 +1063,7 @@ class ResumeParser:
             'job_title': job_title,
             'resume_text': text,
             'parse_source': parse_source,
+            'location': candidate_location,
         }
 
 
@@ -1101,6 +1111,85 @@ class JobProcessor:
         'Product Management': ['Product Manager', 'Product Owner'],
     }
 
+    # Indian states/cities → country "india" mapping
+    INDIAN_STATES = {
+        'andhra pradesh', 'arunachal pradesh', 'assam', 'bihar', 'chhattisgarh',
+        'goa', 'gujarat', 'haryana', 'himachal pradesh', 'jharkhand', 'karnataka',
+        'kerala', 'madhya pradesh', 'maharashtra', 'manipur', 'meghalaya', 'mizoram',
+        'nagaland', 'odisha', 'punjab', 'rajasthan', 'sikkim', 'tamil nadu',
+        'telangana', 'tripura', 'uttar pradesh', 'uttarakhand', 'west bengal',
+        'delhi', 'delhi ncr', 'chandigarh', 'jammu and kashmir', 'ladakh',
+    }
+    INDIAN_CITIES = {
+        'mumbai', 'pune', 'bangalore', 'bengaluru', 'hyderabad', 'chennai',
+        'kolkata', 'delhi', 'noida', 'gurgaon', 'gurugram', 'ahmedabad',
+        'jaipur', 'lucknow', 'kochi', 'thiruvananthapuram', 'indore',
+        'bhopal', 'coimbatore', 'vizag', 'visakhapatnam', 'nagpur', 'surat',
+        'chandigarh', 'bhubaneswar', 'patna', 'mysore', 'mangalore', 'vadodara',
+    }
+
+    # Valid country strings accepted by JobSpy
+    VALID_COUNTRIES = {
+        'argentina', 'australia', 'austria', 'bahrain', 'bangladesh', 'belgium',
+        'brazil', 'canada', 'chile', 'china', 'colombia', 'costa rica', 'czech republic',
+        'denmark', 'ecuador', 'egypt', 'finland', 'france', 'germany', 'greece',
+        'hong kong', 'hungary', 'india', 'indonesia', 'ireland', 'israel', 'italy',
+        'japan', 'kuwait', 'luxembourg', 'malaysia', 'mexico', 'morocco', 'netherlands',
+        'new zealand', 'nigeria', 'norway', 'oman', 'pakistan', 'panama', 'peru',
+        'philippines', 'poland', 'portugal', 'qatar', 'romania', 'saudi arabia',
+        'singapore', 'south africa', 'south korea', 'spain', 'sweden', 'switzerland',
+        'taiwan', 'thailand', 'turkey', 'ukraine', 'united arab emirates',
+        'uk', 'usa', 'uruguay', 'venezuela', 'vietnam',
+    }
+
+    # Common location keywords → country
+    COUNTRY_HINTS = {
+        'usa': ['usa', 'united states', 'us'],
+        'uk': ['uk', 'united kingdom', 'england', 'london', 'manchester', 'birmingham'],
+        'canada': ['canada', 'toronto', 'vancouver', 'montreal', 'ottawa'],
+        'australia': ['australia', 'sydney', 'melbourne', 'brisbane'],
+        'germany': ['germany', 'berlin', 'munich', 'frankfurt'],
+        'singapore': ['singapore'],
+        'uae': ['uae', 'united arab emirates', 'dubai', 'abu dhabi'],
+    }
+
+    @classmethod
+    def _detect_country(cls, location: str) -> str:
+        """Detect the Indeed/Glassdoor country code from a location string."""
+        if not location:
+            return 'india'
+        loc = location.lower().strip()
+
+        # Direct match against valid countries
+        if loc in cls.VALID_COUNTRIES:
+            return loc
+
+        # Check if any part is a known Indian state or city
+        parts = [p.strip() for p in loc.replace(',', ' ').split()]
+        full_parts = [p.strip() for p in loc.split(',')]
+        for part in full_parts:
+            part = part.strip().lower()
+            if part in cls.INDIAN_STATES or part in cls.INDIAN_CITIES:
+                return 'india'
+        for word in parts:
+            if word in cls.INDIAN_CITIES:
+                return 'india'
+
+        # Check country hints
+        for country, keywords in cls.COUNTRY_HINTS.items():
+            for kw in keywords:
+                if kw in loc:
+                    return country
+
+        # Check if any part of location directly matches a valid country
+        for part in full_parts:
+            part = part.strip().lower()
+            if part in cls.VALID_COUNTRIES:
+                return part
+
+        # Default fallback
+        return 'india'
+
     def __init__(self):
         self.skills_db = SKILLS_DATABASE
 
@@ -1115,7 +1204,7 @@ class JobProcessor:
         worker_script = os.path.join(os.path.dirname(__file__), "scrape_worker.py")
 
         if site_names is None:
-            site_names = ['linkedin']
+            site_names = ['indeed', 'linkedin', 'glassdoor', 'google', 'zip_recruiter', 'bayt', 'naukri']
 
         search_terms = []
         if llm_job_title and llm_job_title.strip():
@@ -1136,48 +1225,61 @@ class JobProcessor:
             if fallback_term not in search_terms:
                 search_terms.append(fallback_term)
 
-        per_term = max(50, results_wanted // max(len(search_terms), 1))
-        country = 'india' if 'india' in location.lower() else location.split(',')[-1].strip().lower()
+        # 10 results per platform per search term
+        per_term = 10
+        country = self._detect_country(location)
 
         print(f"[SCRAPE] Search terms: {search_terms}")
-        print(f"[SCRAPE] {per_term} results per term, country={country}")
+        print(f"[SCRAPE] Sites: {site_names}")
+        print(f"[SCRAPE] {per_term} results per platform per term, country={country}")
         all_records = []
+        # Scrape EACH site individually (per term) so one dominant scraper
+        # (usually Indeed) can't crowd out the others. Each site gets its own
+        # results_wanted budget, and a failure on one site doesn't affect the rest.
         for term in search_terms:
-            try:
-                print(f"[SCRAPE] Scraping '{term}' ...")
-                import time as _t; _t0 = _t.time()
-                params_json = json.dumps({
-                    "site_names": site_names,
-                    "search_term": term,
-                    "location": location,
-                    "results_wanted": per_term,
-                    "country_indeed": country,
-                })
-                proc = subprocess.run(
-                    [sys.executable, worker_script],
-                    input=params_json,
-                    capture_output=True, text=True, timeout=120,
-                    cwd=os.path.dirname(__file__),
-                )
-                _elapsed = _t.time() - _t0
-                if proc.returncode != 0:
-                    print(f"[SCRAPE]   '{term}' FAILED in {_elapsed:.1f}s — exit code {proc.returncode}")
-                    if proc.stderr:
-                        print(f"[SCRAPE]   stderr: {proc.stderr[:300]}")
-                    continue
+            print(f"[SCRAPE] Scraping '{term}' across {len(site_names)} platforms (one-by-one) ...")
+            for site in site_names:
+                try:
+                    import time as _t; _t0 = _t.time()
+                    params_json = json.dumps({
+                        "site_names": [site],
+                        "search_term": term,
+                        "location": location,
+                        "results_wanted": per_term,
+                        "country_indeed": country,
+                        "description_format": "markdown",
+                        # CRITICAL: without this, LinkedIn returns jobs with no
+                        # description and they all get dropped in process_jobs.
+                        "linkedin_fetch_description": True,
+                    })
+                    proc = subprocess.run(
+                        [sys.executable, worker_script],
+                        input=params_json,
+                        capture_output=True, text=True, timeout=180,
+                        cwd=os.path.dirname(__file__),
+                    )
+                    _elapsed = _t.time() - _t0
+                    if proc.returncode != 0:
+                        print(f"[SCRAPE]   {site}/'{term}' CRASHED in {_elapsed:.1f}s — exit {proc.returncode}")
+                        if proc.stderr:
+                            print(f"[SCRAPE]     stderr: {proc.stderr.strip()[:200]}")
+                        continue
 
-                data = json.loads(proc.stdout)
-                if not data.get("success"):
-                    print(f"[SCRAPE]   '{term}' FAILED in {_elapsed:.1f}s: {data.get('error', 'unknown')}")
-                    continue
-                jobs = data.get("jobs", [])
-                print(f"[SCRAPE]   '{term}' OK in {_elapsed:.1f}s — {len(jobs)} jobs found")
-                if jobs:
-                    all_records.extend(jobs)
-            except subprocess.TimeoutExpired:
-                print(f"   Scraping '{term}' timed out (120s)")
-            except Exception as e:
-                print(f"   Scraping '{term}' failed: {e}")
+                    data = json.loads(proc.stdout)
+                    if not data.get("success"):
+                        print(f"[SCRAPE]   {site}/'{term}' FAILED in {_elapsed:.1f}s: {data.get('error', 'unknown')[:120]}")
+                        continue
+                    jobs = data.get("jobs", [])
+                    # Tag every record with the source site so we can audit diversity
+                    for j in jobs:
+                        j.setdefault('site', site)
+                    print(f"[SCRAPE]   {site}/'{term}' OK in {_elapsed:.1f}s — {len(jobs)} jobs")
+                    if jobs:
+                        all_records.extend(jobs)
+                except subprocess.TimeoutExpired:
+                    print(f"[SCRAPE]   {site}/'{term}' TIMED OUT (180s)")
+                except Exception as e:
+                    print(f"[SCRAPE]   {site}/'{term}' EXCEPTION: {e}")
 
         if not all_records:
             return []
@@ -1190,6 +1292,11 @@ class JobProcessor:
             if key not in seen:
                 seen.add(key)
                 unique.append(job)
+
+        # Per-site breakdown so you can see diversity at a glance
+        from collections import Counter
+        site_counts = Counter(j.get('site', 'unknown') for j in unique)
+        print(f"[SCRAPE] Total unique jobs: {len(unique)} — by site: {dict(site_counts)}")
         return unique
 
     def extract_skills_from_description(self, description):
@@ -1223,7 +1330,12 @@ class JobProcessor:
         processed = []
         for i, job in enumerate(jobs_list):
             try:
-                desc = job.get('description', '')
+                desc = job.get('description', '') or ''
+                # Keep jobs even if the scraper didn't return a description —
+                # we'd rather show diverse results from LinkedIn/Google/etc with
+                # a thin description than lose them entirely. Fall back to title.
+                if not desc:
+                    desc = job.get('title', '') or ''
                 if not desc:
                     continue
                 skills = self.extract_skills_from_description(desc)
@@ -1449,13 +1561,16 @@ class ConvDeepFMJobRecommender:
             raw = self.model(x_cat_t, x_deep_t).item()
         return 1 / (1 + np.exp(-raw))
 
+    # All platforms supported by JobSpy
+    ALL_SITES = ["indeed", "linkedin", "glassdoor", "google", "zip_recruiter", "bayt", "naukri"]
+
     def recommend_from_resume(self, resume_path, resume_type='pdf', location="India",
                               num_jobs=100, top_k=15, min_skill_match=0.05,
                               site_names=None):
         import time as _time
         pipeline_start = _time.time()
         if site_names is None:
-            site_names = ['linkedin']
+            site_names = self.ALL_SITES
 
         # ── STEP 1: Parse resume ──
         print(f"\n{'='*60}")
@@ -1472,10 +1587,18 @@ class ConvDeepFMJobRecommender:
         print(f"[PIPELINE]   job_title: {user_profile.get('job_title', '?')}")
         print(f"[PIPELINE]   experience: {user_profile.get('experience_years', '?')} years")
 
+        # ── Auto-detect location from resume, fallback to param, fallback to India ──
+        resume_location = user_profile.get('location', '').strip()
+        if resume_location:
+            location = resume_location
+            print(f"[PIPELINE]   location (from resume): {location}")
+        else:
+            print(f"[PIPELINE]   location (fallback): {location}")
+
         if not user_profile['skills']:
             print("[PIPELINE]   WARNING: No skills detected — domain-only search")
 
-        # ── STEP 2: Scrape jobs ──
+        # ── STEP 2: Scrape jobs from ALL platforms ──
         print(f"\n[PIPELINE] STEP 2/5: Scraping jobs from {site_names} ...")
         print(f"[PIPELINE]   location: {location}, num_jobs: {num_jobs}")
         t0 = _time.time()
@@ -1522,10 +1645,15 @@ class ConvDeepFMJobRecommender:
                             num_jobs=100, top_k=15, site_names=None):
         """Recommend jobs from already-extracted resume text."""
         if site_names is None:
-            site_names = ['linkedin']
+            site_names = self.ALL_SITES
 
         parser = ResumeParser()
         user_profile = parser.parse_resume_from_text(resume_text, groq_client=self.groq)
+
+        # Auto-detect location from resume
+        resume_location = user_profile.get('location', '').strip()
+        if resume_location:
+            location = resume_location
 
         processor = JobProcessor()
         raw_jobs = processor.scrape_jobs(

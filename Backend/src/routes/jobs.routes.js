@@ -13,8 +13,15 @@ const searchSchema = z.object({
   location:    z.string().default(""),
   site:        z.string().default("indeed,linkedin"),
   days_old:    z.coerce.number().int().min(1).max(30).default(7),
-  results:     z.coerce.number().int().min(1).max(50).default(10),
+  results:     z.coerce.number().int().min(1).max(100).default(20),
   remote_only: z.coerce.boolean().default(false),
+  job_type:    z.enum(["fulltime", "parttime", "internship", "contract", ""]).default(""),
+  easy_apply:  z.coerce.boolean().default(false),
+  distance:    z.coerce.number().int().min(1).max(200).optional(),
+  country_indeed: z.string().optional(),
+  linkedin_fetch_description: z.coerce.boolean().default(false),
+  description_format: z.enum(["markdown", "html", ""]).default("markdown"),
+  google_search_term: z.string().optional(),
 });
 
 router.post("/search", validate(searchSchema), async (req, res, next) => {

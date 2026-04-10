@@ -91,7 +91,7 @@ async def analyze_resume(
     resume: UploadFile = File(...),
     location: str = Form("India"),
     num_jobs: int = Form(100),
-    top_k: int = Form(15),
+    top_k: int = Form(500),  # effectively "return all scored jobs" — not just top 15
 ):
     """
     Accept a resume file (PDF/DOCX), run it through the ConvDeepFM pipeline,
@@ -144,6 +144,8 @@ async def analyze_resume(
         # the sync Groq httpx client work correctly
         import time as _time
         _t0 = _time.time()
+        # site_names=None lets the engine use ALL JobSpy platforms automatically
+        # location is a fallback — the engine will prefer the location extracted from the resume
         result = await asyncio.to_thread(
             engine.recommend_from_resume,
             tmp_path,
@@ -152,7 +154,7 @@ async def analyze_resume(
             num_jobs,
             top_k,
             0.05,
-            ["linkedin"],
+            None,
         )
         print(f"[API] Pipeline finished in {_time.time()-_t0:.1f}s — result={'OK' if result else 'None'}")
 

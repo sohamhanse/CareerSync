@@ -18,6 +18,7 @@ import type { RecommendationResponse } from '@/services/api.types';
 
 const Search = () => {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [location, setLocation] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<RecommendationResponse | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ const Search = () => {
     setAnalysisResult(null);
 
     try {
-      const result = await analyzeResume(resumeFile);
+      const result = await analyzeResume(resumeFile, location);
       if (!result.success || (result.error && result.jobs.length === 0)) {
         setAnalysisError(result.error || 'No results found');
       } else {
@@ -92,10 +93,27 @@ const Search = () => {
           {/* RESUME UPLOAD CARD */}
           <div className="max-w-2xl mx-auto mb-10">
             <div className="bg-white border border-cobalt-100/50 rounded-2xl p-6 shadow-card">
-              <div className="flex items-center gap-4">
-                <div className="bg-cobalt-50 p-3 rounded-xl">
-                  <Upload className="h-6 w-6 text-cobalt-600" />
+              <div className="flex flex-col gap-5">
+                <div className="flex bg-cobalt-50/50 rounded-xl p-3 border border-cobalt-100 focus-within:ring-2 focus-within:ring-cobalt-500">
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-cobalt-500 uppercase tracking-wide">
+                      Job Location
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Remote, San Francisco, India"
+                      className="w-full bg-transparent border-none outline-none text-sm text-cobalt-900 mt-1 placeholder:text-cobalt-400 focus:ring-0"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      disabled={isAnalyzing}
+                    />
+                  </div>
                 </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="bg-cobalt-50 p-3 rounded-xl">
+                    <Upload className="h-6 w-6 text-cobalt-600" />
+                  </div>
 
                 <div className="flex-1 min-w-0">
                   {resumeFile ? (
@@ -140,6 +158,7 @@ const Search = () => {
                     {isAnalyzing ? 'Analyzing...' : 'Find Matching Jobs'}
                   </button>
                 )}
+              </div>
               </div>
             </div>
           </div>
