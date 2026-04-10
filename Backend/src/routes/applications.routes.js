@@ -14,7 +14,7 @@ const applySchema = z.object({
 });
 
 const statusSchema = z.object({
-  status: z.enum(["applied", "interview", "offer", "rejected", "withdrawn"]),
+  status: z.enum(["applied", "screening", "interview", "offer", "accepted", "rejected", "withdrawn"]),
 });
 
 router.get("/", requireAuth, async (req, res, next) => {

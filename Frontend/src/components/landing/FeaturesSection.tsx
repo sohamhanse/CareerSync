@@ -46,7 +46,7 @@ const FeaturesSection = () => {
             description="Search thousands of jobs from hundreds of sources in one place, saving you time and effort."
             gradient="blue"
             delay={100}
-            link="/features/job-aggregation"
+            link="/search"
           />
           <FeatureCard
             icon={<AIIcon />}
@@ -54,7 +54,7 @@ const FeaturesSection = () => {
             description="Get personalized job recommendations based on your skills, experience, and preferences."
             gradient="purple"
             delay={200}
-            link="/features/ai-recommendations"
+            link="/search"
           />
           <FeatureCard
             icon={<TrackerIcon />}
@@ -62,7 +62,7 @@ const FeaturesSection = () => {
             description="Keep track of all your applications in one place with our intuitive kanban board."
             gradient="mixed"
             delay={300}
-            link="/features/application-tracker"
+            link="/profile"
           />
           <FeatureCard
             icon={<AlertsIcon />}
@@ -70,7 +70,7 @@ const FeaturesSection = () => {
             description="Receive notifications about new job postings, application updates, and interview reminders."
             gradient="blue"
             delay={400}
-            link="/features/real-time-alerts"
+            link="/search"
           />
         </div>
         

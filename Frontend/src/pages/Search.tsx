@@ -12,16 +12,25 @@ import {
 
 import Navbar from '../components/Navbar';
 import AIJobCard from '../components/ui/AIJobCard';
+import JobDetailModal from '../components/JobDetailModal';
 import Footer from '../components/Footer';
 import { analyzeResume } from '@/services/api';
-import type { RecommendationResponse } from '@/services/api.types';
+import type { RecommendationResponse, AIJob } from '@/services/api.types';
+
+// Module-level cache so results survive component unmount/remount on tab switch
+let cachedResult: RecommendationResponse | null = null;
+let cachedLocation: string = '';
 
 const Search = () => {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [location, setLocation] = useState<string>('');
+  const [location, setLocation] = useState<string>(cachedLocation);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<RecommendationResponse | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<RecommendationResponse | null>(cachedResult);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  // Job detail modal
+  const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,6 +50,8 @@ const Search = () => {
     setResumeFile(null);
     setAnalysisResult(null);
     setAnalysisError(null);
+    cachedResult = null;
+    cachedLocation = '';
   };
 
   const handleAnalyze = async () => {
@@ -56,12 +67,19 @@ const Search = () => {
         setAnalysisError(result.error || 'No results found');
       } else {
         setAnalysisResult(result);
+        cachedResult = result;
+        cachedLocation = location;
       }
     } catch (err: any) {
       setAnalysisError(err.message || 'Failed to analyze resume');
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const openJobDetail = (job: AIJob) => {
+    setSelectedJob(job);
+    setIsModalOpen(true);
   };
 
   return (
@@ -122,7 +140,7 @@ const Search = () => {
                       <span className="text-sm font-medium text-cobalt-700 truncate">
                         {resumeFile.name}
                       </span>
-                      <button onClick={clearResume} className="shrink-0 p-1 hover:bg-cobalt-100 rounded-lg">
+                      <button onClick={clearResume} className="shrink-0 p-1 hover:bg-cobalt-100 rounded-lg cursor-pointer">
                         <X className="h-4 w-4 text-cobalt-400" />
                       </button>
                     </div>
@@ -148,7 +166,7 @@ const Search = () => {
                   <button
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    className="cs-btn-primary px-6 py-2.5 text-sm rounded-xl flex items-center gap-2 shrink-0 disabled:opacity-50"
+                    className="cs-btn-primary px-6 py-2.5 text-sm rounded-xl flex items-center gap-2 shrink-0 disabled:opacity-50 cursor-pointer"
                   >
                     {isAnalyzing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -184,7 +202,7 @@ const Search = () => {
                 <p className="text-red-600 font-medium">{analysisError}</p>
                 <button
                   onClick={handleAnalyze}
-                  className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200"
+                  className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 cursor-pointer"
                 >
                   Try Again
                 </button>
@@ -224,7 +242,7 @@ const Search = () => {
                   {analysisResult.jobs.length} AI-Matched Jobs
                 </h2>
                 <span className="text-xs text-cobalt-400">
-                  Ranked by CNN model + skill overlap + semantic similarity
+                  Click a card for full details
                 </span>
               </div>
 
@@ -237,7 +255,7 @@ const Search = () => {
                         <div className="absolute -top-2 -right-2 z-10 bg-cobalt-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                           {job.match_score}% match
                         </div>
-                        <AIJobCard job={job} />
+                        <AIJobCard job={job} onClick={() => openJobDetail(job)} />
                       </div>
                       {/* Skills section */}
                       <div className="bg-white rounded-b-xl border border-t-0 border-cobalt-100/50 px-5 pb-4 -mt-1">
@@ -284,7 +302,7 @@ const Search = () => {
             </>
           )}
 
-          {/* EMPTY STATE — no resume uploaded yet, no results */}
+          {/* EMPTY STATE */}
           {!resumeFile && !analysisResult && !isAnalyzing && !analysisError && (
             <div className="text-center py-16">
               <div className="bg-cobalt-50 h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-5">
@@ -294,7 +312,7 @@ const Search = () => {
                 Upload your resume to get started
               </h3>
               <p className="text-cobalt-500 max-w-md mx-auto">
-                Our AI will extract your skills, find relevant job listings from LinkedIn,
+                Our AI will extract your skills, find relevant job listings across multiple platforms,
                 and rank them using a deep learning model trained on real job-matching data.
               </p>
             </div>
@@ -304,6 +322,13 @@ const Search = () => {
       </main>
 
       <Footer />
+
+      {/* Job Detail Modal */}
+      <JobDetailModal
+        job={selectedJob}
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setSelectedJob(null); }}
+      />
     </div>
   );
 };

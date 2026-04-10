@@ -88,6 +88,8 @@ def main():
             kwargs["enforce_annual_salary"] = True
         if args.get("proxies"):
             kwargs["proxies"] = args["proxies"]
+        if args.get("user_agent"):
+            kwargs["user_agent"] = args["user_agent"]
 
         _err(f"JobSpy kwargs: { {k: v for k, v in kwargs.items() if k != 'proxies'} }")
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, Search, User, LogOut } from 'lucide-react';
 import logo from '../assets/CSLogo1.png';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -128,13 +128,6 @@ const Navbar = () => {
                       <DropdownMenuItem className="cursor-pointer hover:bg-cobalt-50">
                         <User className="mr-2 h-4 w-4 text-cobalt-500" />
                         Profile
-                      </DropdownMenuItem>
-                    </Link>
-
-                    <Link to="/profile/settings">
-                      <DropdownMenuItem className="cursor-pointer hover:bg-cobalt-50">
-                        <Settings className="mr-2 h-4 w-4 text-cobalt-500" />
-                        Settings
                       </DropdownMenuItem>
                     </Link>
 

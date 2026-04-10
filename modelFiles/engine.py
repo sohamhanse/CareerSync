@@ -1193,12 +1193,38 @@ class JobProcessor:
     def __init__(self):
         self.skills_db = SKILLS_DATABASE
 
+    # Sites that reliably return results — get a higher budget & longer timeout
+    RELIABLE_SITES = {'indeed', 'linkedin'}
+    # Region-specific site availability
+    SITE_REGIONS = {
+        'zip_recruiter': {'usa', 'uk', 'canada'},
+        'bayt': {'uae', 'united arab emirates', 'saudi arabia', 'qatar',
+                 'kuwait', 'oman', 'bahrain', 'egypt', 'morocco'},
+        'naukri': {'india'},
+        'glassdoor': None,   # global but flaky — keep it, short timeout
+        'google': None,      # global
+        'indeed': None,      # global
+        'linkedin': None,    # global
+    }
+
+    def _filter_sites_for_country(self, site_names, country):
+        """Remove sites that don't serve the detected country."""
+        filtered = []
+        for site in site_names:
+            regions = self.SITE_REGIONS.get(site)
+            if regions is None or country in regions:
+                filtered.append(site)
+            else:
+                print(f"[SCRAPE] Skipping {site} — not available for country '{country}'")
+        return filtered
+
     def scrape_jobs(self, location="India", results_wanted=100,
                     site_names=None, domains=None, domain='Software Engineer',
                     llm_job_title: str = ""):
         # Scraping runs in a SUBPROCESS to avoid DLL conflicts between
         # PyTorch native libs and jobspy/tls_client threads on Windows.
         import subprocess
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         print(f"[SCRAPE] Starting job scraping — location={location}, sites={site_names}")
 
         worker_script = os.path.join(os.path.dirname(__file__), "scrape_worker.py")
@@ -1225,61 +1251,82 @@ class JobProcessor:
             if fallback_term not in search_terms:
                 search_terms.append(fallback_term)
 
-        # 10 results per platform per search term
-        per_term = 10
         country = self._detect_country(location)
 
-        print(f"[SCRAPE] Search terms: {search_terms}")
-        print(f"[SCRAPE] Sites: {site_names}")
-        print(f"[SCRAPE] {per_term} results per platform per term, country={country}")
-        all_records = []
-        # Scrape EACH site individually (per term) so one dominant scraper
-        # (usually Indeed) can't crowd out the others. Each site gets its own
-        # results_wanted budget, and a failure on one site doesn't affect the rest.
-        for term in search_terms:
-            print(f"[SCRAPE] Scraping '{term}' across {len(site_names)} platforms (one-by-one) ...")
-            for site in site_names:
-                try:
-                    import time as _t; _t0 = _t.time()
-                    params_json = json.dumps({
-                        "site_names": [site],
-                        "search_term": term,
-                        "location": location,
-                        "results_wanted": per_term,
-                        "country_indeed": country,
-                        "description_format": "markdown",
-                        # CRITICAL: without this, LinkedIn returns jobs with no
-                        # description and they all get dropped in process_jobs.
-                        "linkedin_fetch_description": True,
-                    })
-                    proc = subprocess.run(
-                        [sys.executable, worker_script],
-                        input=params_json,
-                        capture_output=True, text=True, timeout=180,
-                        cwd=os.path.dirname(__file__),
-                    )
-                    _elapsed = _t.time() - _t0
-                    if proc.returncode != 0:
-                        print(f"[SCRAPE]   {site}/'{term}' CRASHED in {_elapsed:.1f}s — exit {proc.returncode}")
-                        if proc.stderr:
-                            print(f"[SCRAPE]     stderr: {proc.stderr.strip()[:200]}")
-                        continue
+        # Filter out sites that don't serve this country
+        site_names = self._filter_sites_for_country(site_names, country)
 
-                    data = json.loads(proc.stdout)
-                    if not data.get("success"):
-                        print(f"[SCRAPE]   {site}/'{term}' FAILED in {_elapsed:.1f}s: {data.get('error', 'unknown')[:120]}")
-                        continue
-                    jobs = data.get("jobs", [])
-                    # Tag every record with the source site so we can audit diversity
-                    for j in jobs:
-                        j.setdefault('site', site)
-                    print(f"[SCRAPE]   {site}/'{term}' OK in {_elapsed:.1f}s — {len(jobs)} jobs")
+        # Reliable sites get more results; flaky ones get a smaller budget
+        per_term_reliable = 15
+        per_term_other = 10
+
+        print(f"[SCRAPE] Search terms: {search_terms}")
+        print(f"[SCRAPE] Sites (after region filter): {site_names}")
+        print(f"[SCRAPE] Reliable={per_term_reliable}/site, Other={per_term_other}/site, country={country}")
+        all_records = []
+
+        def _scrape_one(site, term):
+            """Scrape a single site+term combo in a subprocess."""
+            import time as _t
+            is_reliable = site in self.RELIABLE_SITES
+            per_term = per_term_reliable if is_reliable else per_term_other
+            timeout = 120 if is_reliable else 45
+
+            params = {
+                "site_names": [site],
+                "search_term": term,
+                "location": location,
+                "results_wanted": per_term,
+                "country_indeed": country,
+                "description_format": "markdown",
+                "linkedin_fetch_description": True,
+            }
+            # Google Jobs needs google_search_term to find results
+            if site == "google":
+                params["google_search_term"] = f"{term} jobs in {location}"
+
+            params_json = json.dumps(params)
+            _t0 = _t.time()
+            try:
+                proc = subprocess.run(
+                    [sys.executable, worker_script],
+                    input=params_json,
+                    capture_output=True, text=True, timeout=timeout,
+                    cwd=os.path.dirname(__file__),
+                )
+                _elapsed = _t.time() - _t0
+                if proc.returncode != 0:
+                    print(f"[SCRAPE]   {site}/'{term}' CRASHED in {_elapsed:.1f}s — exit {proc.returncode}")
+                    if proc.stderr:
+                        print(f"[SCRAPE]     stderr: {proc.stderr.strip()[:200]}")
+                    return []
+
+                data = json.loads(proc.stdout)
+                if not data.get("success"):
+                    print(f"[SCRAPE]   {site}/'{term}' FAILED in {_elapsed:.1f}s: {data.get('error', 'unknown')[:120]}")
+                    return []
+                jobs = data.get("jobs", [])
+                for j in jobs:
+                    j.setdefault('site', site)
+                print(f"[SCRAPE]   {site}/'{term}' OK in {_elapsed:.1f}s — {len(jobs)} jobs")
+                return jobs
+            except subprocess.TimeoutExpired:
+                print(f"[SCRAPE]   {site}/'{term}' TIMED OUT ({timeout}s)")
+                return []
+            except Exception as e:
+                print(f"[SCRAPE]   {site}/'{term}' EXCEPTION: {e}")
+                return []
+
+        # Scrape all sites in parallel (per search term) to maximise coverage
+        # and minimise total wall-clock time.
+        for term in search_terms:
+            print(f"[SCRAPE] Scraping '{term}' across {len(site_names)} platforms (parallel) ...")
+            with ThreadPoolExecutor(max_workers=len(site_names)) as executor:
+                futures = {executor.submit(_scrape_one, site, term): site for site in site_names}
+                for future in as_completed(futures):
+                    jobs = future.result()
                     if jobs:
                         all_records.extend(jobs)
-                except subprocess.TimeoutExpired:
-                    print(f"[SCRAPE]   {site}/'{term}' TIMED OUT (180s)")
-                except Exception as e:
-                    print(f"[SCRAPE]   {site}/'{term}' EXCEPTION: {e}")
 
         if not all_records:
             return []

@@ -6,16 +6,36 @@ const JobCache = require("../models/JobCache");
 const logger = require("../utils/logger");
 
 const CACHE_TTL_MINUTES = 60;
+const SUPPORTED_SITES = ["indeed", "linkedin", "glassdoor", "google", "zip_recruiter", "bayt", "naukri"];
+const ALL_SITES_SENTINELS = new Set(["all", "*", "any"]);
 
 // Resolve once: scrape_worker.py lives in modelFiles/ (sibling of Backend/)
 const WORKER_SCRIPT = path.resolve(__dirname, "../../../modelFiles/scrape_worker.py");
 const PYTHON_BIN = env.PYTHON_EXECUTABLE;
 
+const normalizeSiteNames = (siteParam) => {
+  if (siteParam === undefined || siteParam === null) return SUPPORTED_SITES;
+
+  const raw = String(siteParam).toLowerCase().trim();
+  if (!raw || ALL_SITES_SENTINELS.has(raw)) return SUPPORTED_SITES;
+
+  const tokens = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (tokens.some((s) => ALL_SITES_SENTINELS.has(s))) return SUPPORTED_SITES;
+
+  const valid = [...new Set(tokens.filter((s) => SUPPORTED_SITES.includes(s)))];
+  return valid.length > 0 ? valid : SUPPORTED_SITES;
+};
+
 const buildCacheKey = (params) => {
+  const normalizedSites = normalizeSiteNames(params.site).slice().sort().join(",");
   const normalized = JSON.stringify({
     search: (params.search || "").toLowerCase().trim(),
     location: (params.location || "").toLowerCase().trim(),
-    site: params.site || "all",
+    site: normalizedSites,
     days_old: params.days_old || 7,
     remote_only: !!params.remote_only,
     job_type: params.job_type || "",
@@ -27,9 +47,8 @@ const buildCacheKey = (params) => {
  * Translate frontend search params → scrape_worker.py JSON input.
  */
 const buildWorkerInput = (params) => {
-  // Map site string ("indeed,linkedin") to array
-  const siteStr = (params.site || "indeed,linkedin").toLowerCase();
-  const siteNames = siteStr.split(",").map((s) => s.trim()).filter(Boolean);
+  // Missing/blank/"all" expands to every supported platform.
+  const siteNames = normalizeSiteNames(params.site);
 
   const input = {
     site_names: siteNames,

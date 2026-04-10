@@ -46,7 +46,7 @@ const getRecommendedJobs = async (profile) => {
     const { jobs } = await searchJobs({
       search: searchTerm,
       location,
-      site: "linkedin,indeed",
+      site: "all",
       days_old: 7,
       results: 30,
       remote_only: remoteOnly,

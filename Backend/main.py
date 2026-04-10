@@ -15,6 +15,16 @@ import traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
+# Ensure print-based logs appear immediately in console output.
+# This helps when the app runs in child processes (e.g., uvicorn reload)
+# where stdout can otherwise be buffered.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(line_buffering=True, write_through=True)
+        except Exception:
+            pass
+
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))  # loads .env from Backend/
 
 from fastapi import FastAPI, UploadFile, File, Form

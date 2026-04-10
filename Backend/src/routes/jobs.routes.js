@@ -11,7 +11,7 @@ const router = Router();
 const searchSchema = z.object({
   search:      z.string().default(""),
   location:    z.string().default(""),
-  site:        z.string().default("indeed,linkedin"),
+  site:        z.string().default("all"),
   days_old:    z.coerce.number().int().min(1).max(30).default(7),
   results:     z.coerce.number().int().min(1).max(100).default(20),
   remote_only: z.coerce.boolean().default(false),

@@ -9,16 +9,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Search from "./pages/Search";
-import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import JobDetail from "./pages/JobDetail";
-import Applications from "./pages/Applications";
 import Onboarding from "./pages/Onboarding";
-import JobAggregation from "./pages/features/JobAggregation";
-import AIRecommendations from "./pages/features/AIRecommendations";
-import ApplicationTracker from "./pages/features/ApplicationTracker";
-import RealTimeAlerts from "./pages/features/RealTimeAlerts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,11 +32,19 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ProfileCompleteGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  if (!user?.profile_complete) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
+}
+
 function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, isLoading } = useAuth();
   if (isLoading) return null;
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
-  if (user?.profile_complete) return <Navigate to="/dashboard" replace />;
+  if (user?.profile_complete) return <Navigate to="/profile" replace />;
   return <>{children}</>;
 }
 
@@ -52,7 +53,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) return null;
   if (isAuthenticated) {
     if (user && !user.profile_complete) return <Navigate to="/onboarding" replace />;
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/profile" replace />;
   }
   return <>{children}</>;
 }
@@ -76,16 +77,12 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
         <Route path="/auth" element={<PublicOnlyRoute><PageTransition><Auth /></PageTransition></PublicOnlyRoute>} />
-        <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
+        <Route path="/search" element={<ProfileCompleteGuard><PageTransition><Search /></PageTransition></ProfileCompleteGuard>} />
         <Route path="/onboarding" element={<OnboardingGuard><PageTransition><Onboarding /></PageTransition></OnboardingGuard>} />
-        <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
-        <Route path="/job/:id" element={<PageTransition><JobDetail /></PageTransition>} />
-        <Route path="/applications" element={<ProtectedRoute><PageTransition><Applications /></PageTransition></ProtectedRoute>} />
-        <Route path="/features/job-aggregation" element={<PageTransition><JobAggregation /></PageTransition>} />
-        <Route path="/features/ai-recommendations" element={<PageTransition><AIRecommendations /></PageTransition>} />
-        <Route path="/features/application-tracker" element={<PageTransition><ApplicationTracker /></PageTransition>} />
-        <Route path="/features/real-time-alerts" element={<PageTransition><RealTimeAlerts /></PageTransition>} />
+        {/* Legacy redirects */}
+        <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
+        <Route path="/applications" element={<Navigate to="/profile" replace />} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
