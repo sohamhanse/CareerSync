@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -r \"ConvDeepFM\\\\|convdeepfm\\\\|model\\\\|predict\" /d/CareerSync/Crawler/*.py)",
-      "Bash(du -sh /d/CareerSync/modelfiles/*)",
-      "Bash(taskkill:*)"
-    ]
-  }
-}
